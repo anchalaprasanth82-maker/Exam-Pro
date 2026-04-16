@@ -19,7 +19,7 @@ const startAttempt = async (req, res) => {
 
     // Check for prior submitted attempt
     const { rows: priorAttempts } = await db.execute({
-      sql: "SELECT status FROM attempts WHERE user_id = ? AND exam_id = ?",
+      sql: "SELECT id, status, start_time FROM attempts WHERE user_id = ? AND exam_id = ?",
       args: [user_id, exam_id]
     });
 
@@ -41,15 +41,37 @@ const startAttempt = async (req, res) => {
         await db.execute({ sql: 'DELETE FROM attempts WHERE user_id = ? AND exam_id = ?', args: [user_id, exam_id] });
         await db.execute({ sql: 'DELETE FROM retake_permissions WHERE user_id = ? AND exam_id = ?', args: [user_id, exam_id] });
       } else {
-        // Already in progress, return resume info
-        return successResponse(res, { attempt_id: attempt.id, status: 'in_progress' }, 'Resume existing attempt');
+        // Already in progress, return full status to prevent UI breaks
+        const startTime = new Date(attempt.start_time);
+        const now = new Date();
+        const elapsedSeconds = !isNaN(startTime.getTime()) ? Math.floor((now - startTime) / 1000) : 0;
+        const timeRemaining = Math.max(0, (exam.duration * 60) - elapsedSeconds);
+
+        const { rows: questions } = await db.execute({
+          sql: 'SELECT id, type, question_text, options, marks, order_index FROM questions WHERE exam_id = ? ORDER BY order_index ASC',
+          args: [exam_id]
+        });
+
+        const { rows: answers } = await db.execute({
+          sql: 'SELECT question_id, answer FROM answers WHERE attempt_id = ?',
+          args: [attempt.id]
+        });
+
+        return successResponse(res, { 
+          attempt_id: attempt.id, 
+          status: 'in_progress',
+          questions,
+          answers,
+          time_remaining: timeRemaining
+        }, 'Resuming existing attempt');
       }
     }
 
     // Create new attempt
+    const nowISO = new Date().toISOString(); 
     const result = await db.execute({
-      sql: "INSERT INTO attempts (user_id, exam_id, start_time, status) VALUES (?, ?, CURRENT_TIMESTAMP, 'in_progress')",
-      args: [user_id, exam_id]
+      sql: "INSERT INTO attempts (user_id, exam_id, start_time, status) VALUES (?, ?, ?, 'in_progress')",
+      args: [user_id, exam_id, nowISO]
     });
 
     const attemptId = Number(result.lastInsertRowid);
@@ -64,7 +86,7 @@ const startAttempt = async (req, res) => {
       attempt_id: attemptId,
       questions,
       time_remaining: exam.duration * 60,
-      start_time: new Date().toISOString()
+      start_time: nowISO
     }, 'Exam started');
 
   } catch (error) {
@@ -94,8 +116,8 @@ const resumeAttempt = async (req, res) => {
     // Calculate time remaining
     const startTime = new Date(attempt.start_time);
     const now = new Date();
-    const elapsedSeconds = Math.floor((now - startTime) / 1000);
-    const timeRemaining = (exam.duration * 60) - elapsedSeconds;
+    const elapsedSeconds = !isNaN(startTime.getTime()) ? Math.floor((now - startTime) / 1000) : 0;
+    const timeRemaining = Math.max(0, (exam.duration * 60) - elapsedSeconds);
 
     if (timeRemaining <= 0) {
       // Auto-submit if time expired

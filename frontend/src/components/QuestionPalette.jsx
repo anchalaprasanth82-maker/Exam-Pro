@@ -2,6 +2,7 @@ import React from 'react';
 import { Flag } from 'lucide-react';
 
 const QuestionPalette = ({ questions, answers, currentIdx, onSelect, flaggedQuestions, onToggleFlag }) => {
+  if (!questions || questions.length === 0) return null;
   return (
     <div className="glass-card p-5 space-y-6">
       <div className="flex items-center justify-between">
@@ -24,7 +25,7 @@ const QuestionPalette = ({ questions, answers, currentIdx, onSelect, flaggedQues
 
           return (
             <button
-              key={q.id}
+              key={q?.id || idx}
               onClick={() => onSelect(idx)}
               className={`
                 relative h-10 w-10 rounded-lg border text-sm font-bold transition-all flex items-center justify-center
@@ -69,8 +70,8 @@ const QuestionPalette = ({ questions, answers, currentIdx, onSelect, flaggedQues
             : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
         }`}
       >
-        <Flag className={`w-4 h-4 ${flaggedQuestions.includes(questions[currentIdx].id) ? 'fill-orange-600' : ''}`} />
-        {flaggedQuestions.includes(questions[currentIdx].id) ? 'Unflag Question' : 'Flag for Review'}
+        <Flag className={`w-4 h-4 ${flaggedQuestions.includes(questions[currentIdx]?.id) ? 'fill-orange-600' : ''}`} />
+        {flaggedQuestions.includes(questions[currentIdx]?.id) ? 'Unflag Question' : 'Flag for Review'}
       </button>
     </div>
   );

@@ -33,6 +33,25 @@ const AdminDashboard = () => {
     fetchStats();
   }, []);
 
+  const handleExport = async () => {
+    try {
+      const response = await api.get('/admin/export');
+      const data = response.data.data;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ExamPortal_Export_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export data', error);
+      alert('Failed to export data. Please try again.');
+    }
+  };
+
   if (loading) return <div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin text-blue-500 w-10 h-10" /></div>;
 
   return (
@@ -47,7 +66,10 @@ const AdminDashboard = () => {
               <p className="text-slate-500 mt-2">Scale and manage your online examination platform.</p>
             </div>
             <div className="flex items-center gap-3">
-               <button className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
+               <button 
+                onClick={handleExport}
+                className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors"
+               >
                   <BarChart3 className="w-4 h-4" /> Export All Data
                </button>
                <Link to="/admin/exams/create" className="btn-primary flex items-center gap-2">
@@ -58,10 +80,10 @@ const AdminDashboard = () => {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-card p-6 bg-blue-600 text-white shadow-xl shadow-blue-100 overflow-hidden relative">
-               <TrendingUp className="absolute -bottom-4 -right-4 w-32 h-32 opacity-10" />
-               <p className="text-blue-100 text-xs font-bold uppercase tracking-widest mb-1">Total Exams</p>
-               <h2 className="text-4xl font-black">{stats.totalExams}</h2>
+            <div className="glass-card p-6 border-l-4 border-l-blue-500 relative overflow-hidden">
+               <TrendingUp className="absolute -bottom-4 -right-4 w-32 h-32 text-blue-500 opacity-5" />
+               <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Total Exams</p>
+               <h2 className="text-4xl font-black text-slate-900">{stats?.totalExams ?? 0}</h2>
                <div className="mt-4 flex items-center gap-2 text-blue-200 text-xs font-medium">
                   <span className="bg-blue-500/50 px-2 py-0.5 rounded">+2 this week</span>
                   <span>Active platform growth</span>

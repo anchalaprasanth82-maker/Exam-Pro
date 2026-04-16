@@ -11,9 +11,15 @@ import ExamList from './pages/student/ExamList';
 import ExamAttempt from './pages/student/ExamAttempt';
 import ResultPage from './pages/student/ResultPage';
 import Leaderboard from './pages/student/Leaderboard';
+import AttemptHistory from './pages/student/AttemptHistory';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CreateExam from './pages/admin/CreateExam';
 import ManageQuestions from './pages/admin/ManageQuestions';
+import StudentManagement from './pages/admin/StudentManagement';
+import Analytics from './pages/admin/Analytics';
+import SubmissionDetail from './pages/admin/SubmissionDetail';
+import Settings from './pages/Settings';
+import HelpSupport from './pages/HelpSupport';
 
 const AppRoutes = () => {
   const { user, isAdmin } = useAuth();
@@ -32,6 +38,11 @@ const AppRoutes = () => {
       <Route path="/exams" element={
         <ProtectedRoute>
           <ExamList />
+        </ProtectedRoute>
+      } />
+      <Route path="/attempts" element={
+        <ProtectedRoute>
+          <AttemptHistory />
         </ProtectedRoute>
       } />
       <Route path="/exam/attempt/:examId" element={
@@ -69,6 +80,33 @@ const AppRoutes = () => {
       <Route path="/admin/questions/:examId" element={
         <ProtectedRoute requireAdmin={true}>
           <ManageQuestions />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/students" element={
+        <ProtectedRoute requireAdmin={true}>
+          <StudentManagement />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/reports" element={
+        <ProtectedRoute requireAdmin={true}>
+          <Analytics />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/reports/:attemptId" element={
+        <ProtectedRoute requireAdmin={true}>
+          <SubmissionDetail />
+        </ProtectedRoute>
+      } />
+
+      {/* Shared Routes */}
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      } />
+      <Route path="/help" element={
+        <ProtectedRoute>
+          <HelpSupport />
         </ProtectedRoute>
       } />
 

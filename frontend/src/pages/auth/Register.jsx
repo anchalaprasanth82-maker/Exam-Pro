@@ -46,11 +46,10 @@ const Register = () => {
            <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 block">Full Name</label>
             <div className="relative">
-              <User className="absolute left-3 top-2.5 text-slate-400 w-5 h-5" />
               <input
                 type="text"
                 required
-                className="input-field pl-10"
+                className="input-field px-4"
                 placeholder="John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -61,11 +60,10 @@ const Register = () => {
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 block">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-2.5 text-slate-400 w-5 h-5" />
               <input
                 type="email"
                 required
-                className="input-field pl-10"
+                className="input-field px-4"
                 placeholder="you@student.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -76,11 +74,10 @@ const Register = () => {
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 block">Password</label>
             <div className="relative">
-              <Key className="absolute left-3 top-2.5 text-slate-400 w-5 h-5" />
               <input
                 type="password"
                 required
-                className="input-field pl-10"
+                className="input-field px-4"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

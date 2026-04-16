@@ -4,6 +4,7 @@ import Sidebar from '../../components/Sidebar';
 import api from '../../services/api';
 import { BookOpen, CheckCircle, Clock, ArrowRight, Loader2, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatToIST } from '../../utils/dateUtils';
 
 const StudentDashboard = () => {
   const [stats, setStats] = useState({ totalTaken: 0, passed: 0, average: 0 });
@@ -16,10 +17,17 @@ const StudentDashboard = () => {
         const response = await api.get('/attempts/my');
         const attempts = response.data.data;
         setRecentAttempts(attempts.slice(0, 5));
+        const submittedAttempts = attempts.filter(a => a.status === 'submitted');
+        const passed = submittedAttempts.filter(a => 
+            a.total_marks > 0 && a.score !== null && 
+            a.score >= (a.total_marks * (a.passing_score / 100))
+        ).length;
         
-        const passed = attempts.filter(a => a.score >= (a.total_marks * (a.passing_score/100))).length;
         const totalTaken = attempts.length;
-        const average = totalTaken > 0 ? (attempts.reduce((acc, curr) => acc + (curr.score/curr.total_marks), 0) / totalTaken * 100).toFixed(1) : 0;
+        const validAttempts = submittedAttempts.filter(a => a.total_marks > 0 && a.score !== null);
+        const average = validAttempts.length > 0 
+          ? (validAttempts.reduce((acc, curr) => acc + (curr.score / curr.total_marks), 0) / validAttempts.length * 100).toFixed(1) 
+          : null;
         
         setStats({ totalTaken, passed, average });
       } catch (error) {
@@ -72,7 +80,7 @@ const StudentDashboard = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Average Score</p>
-                <h2 className="text-2xl font-bold text-slate-900">{stats.average}%</h2>
+                <h2 className="text-2xl font-bold text-slate-900">{stats.average !== null ? `${stats.average}%` : 'N/A'}</h2>
               </div>
             </div>
           </div>
@@ -96,14 +104,22 @@ const StudentDashboard = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-slate-900">{attempt.exam_title}</h4>
-                        <p className="text-xs text-slate-500">Submitted on {new Date(attempt.submit_time).toLocaleDateString()}</p>
+                        <p className="text-xs text-slate-500">Submitted on {formatToIST(attempt.submit_time)}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="text-right">
-                        <p className="text-sm font-bold text-slate-900">{attempt.score}/{attempt.total_marks}</p>
-                        <p className={`text-[10px] font-bold uppercase ${attempt.score >= (attempt.total_marks * (attempt.passing_score/100)) ? 'text-green-600' : 'text-red-500'}`}>
-                          {attempt.score >= (attempt.total_marks * (attempt.passing_score/100)) ? 'Passed' : 'Failed'}
+                        <p className="text-sm font-bold text-slate-900">
+                          {attempt.status === 'submitted' ? `${attempt.score ?? 0}/${attempt.total_marks}` : '--'}
+                        </p>
+                        <p className={`text-[10px] font-bold uppercase ${
+                          attempt.status !== 'submitted' ? 'text-blue-500' :
+                          (attempt.total_marks > 0 && attempt.score >= (attempt.total_marks * (attempt.passing_score / 100))) 
+                            ? 'text-green-600' : 'text-red-500'
+                        }`}>
+                          {attempt.status === 'submitted' 
+                            ? (attempt.total_marks > 0 && attempt.score >= (attempt.total_marks * (attempt.passing_score / 100)) ? 'Passed' : 'Failed')
+                            : 'In Progress'}
                         </p>
                       </div>
                       <Link to={`/result/${attempt.id}`} className="p-2 text-slate-400 group-hover:text-blue-500 transition-colors">

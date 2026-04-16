@@ -5,26 +5,31 @@ const Timer = ({ timeRemaining, onTimeUp }) => {
   const [timeLeft, setTimeLeft] = useState(timeRemaining);
 
   useEffect(() => {
+    setTimeLeft(timeRemaining);
+  }, [timeRemaining]);
+
+  useEffect(() => {
     if (timeLeft <= 0) {
-      onTimeUp();
+      if (onTimeUp) onTimeUp();
       return;
     }
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, onTimeUp]);
+  }, [timeLeft === 0, onTimeUp]);
 
   const formatTime = (seconds) => {
+    if (isNaN(seconds)) return '00:00:00';
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const isLowTime = timeLeft < 300; // Less than 5 mins
+  const isLowTime = !isNaN(timeLeft) && timeLeft < 300; // Less than 5 mins
 
   return (
     <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${

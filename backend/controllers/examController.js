@@ -6,10 +6,13 @@ const getAllExams = async (req, res) => {
   const { role } = req.user;
   try {
     let query = 'SELECT e.*, u.name as creator_name FROM exams e JOIN users u ON e.created_by = u.id';
+    let args = [];
     if (role === 'student') {
-      query += ' WHERE is_published = 1 AND end_time > CURRENT_TIMESTAMP';
+      const now = new Date().toISOString();
+      query += ' WHERE is_published = 1 AND end_time > ?';
+      args.push(now);
     }
-    const { rows } = await db.execute(query);
+    const { rows } = await db.execute({ sql: query, args });
     return successResponse(res, rows);
   } catch (error) {
     return errorResponse(res, 'Failed to fetch exams', 500, error);

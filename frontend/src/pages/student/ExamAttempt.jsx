@@ -34,28 +34,32 @@ const ExamAttempt = () => {
     const initExam = async () => {
       try {
         // Try to resume first
-        const resumeRes = await api.get(`/attempts/resume/${examId}`).catch(() => null);
+        let data;
+        try {
+            const resumeRes = await api.get(`/attempts/resume/${examId}`);
+            data = resumeRes.data.data;
+        } catch (e) {
+            // If resume fails, try starting fresh
+            const startRes = await api.post('/attempts/start', { exam_id: examId });
+            data = startRes.data.data;
+        }
         
-        if (resumeRes) {
-          const { attempt_id, questions, answers: savedAnswers, time_remaining } = resumeRes.data.data;
+        if (data) {
+          const { attempt_id, questions, answers: savedAnswers, time_remaining } = data;
           setAttemptId(attempt_id);
           setQuestions(questions);
           setTimeRemaining(time_remaining);
           
-          const answerMap = {};
-          savedAnswers.forEach(a => answerMap[a.question_id] = a.answer);
-          setAnswers(answerMap);
-        } else {
-          // Start new
-          const startRes = await api.post('/attempts/start', { exam_id: examId });
-          const { attempt_id, questions, time_remaining } = startRes.data.data;
-          setAttemptId(attempt_id);
-          setQuestions(questions);
-          setTimeRemaining(time_remaining);
+          if (savedAnswers) {
+            const answerMap = {};
+            savedAnswers.forEach(a => answerMap[a.question_id] = a.answer);
+            setAnswers(answerMap);
+          }
         }
       } catch (error) {
-        console.error('Failed to init exam', error);
-        alert(error.response?.data?.message || 'Failed to initialize exam');
+        console.error('Failed to initialize exam:', error);
+        const msg = error.response?.data?.message || 'Failed to initialize exam. Please ensure the exam is still active and you have permission to start.';
+        alert(msg);
         navigate('/exams');
       } finally {
         setLoading(false);
@@ -92,6 +96,7 @@ const ExamAttempt = () => {
   }, [attemptId, questions, currentIdx]);
 
   const handleAnswerChange = (val) => {
+    if (!questions[currentIdx]) return;
     setAnswers(prev => ({
       ...prev,
       [questions[currentIdx].id]: val
@@ -115,7 +120,17 @@ const ExamAttempt = () => {
     }
   };
 
-  if (loading && !questions.length) return <div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin text-blue-500 w-10 h-10" /></div>;
+  if (!questions || questions.length === 0) {
+    if (loading) return <div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin text-blue-500 w-10 h-10" /></div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-screen space-y-4">
+        <AlertTriangle className="w-12 h-12 text-amber-500" />
+        <h2 className="text-xl font-bold">Unable to Load Exam</h2>
+        <p className="text-slate-500">The exam data is currently unavailable or your attempt has ended.</p>
+        <button onClick={() => navigate('/exams')} className="btn-primary bg-blue-600">Back to Exams</button>
+      </div>
+    );
+  }
 
   const currentQuestion = questions[currentIdx];
 

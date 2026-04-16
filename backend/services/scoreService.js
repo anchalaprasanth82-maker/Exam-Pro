@@ -57,9 +57,10 @@ const calculateScore = async (attemptId) => {
     }
 
     // Update attempt with total score
+    const nowISO = new Date().toISOString();
     await db.execute({
-      sql: "UPDATE attempts SET score = ?, total_marks = ?, status = 'submitted', submit_time = CURRENT_TIMESTAMP WHERE id = ?",
-      args: [totalScore, totalMarks, attemptId]
+      sql: "UPDATE attempts SET score = ?, total_marks = ?, status = 'submitted', submit_time = ? WHERE id = ?",
+      args: [totalScore, totalMarks, nowISO, attemptId]
     });
 
     return { totalScore, totalMarks };
