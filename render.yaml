@@ -18,7 +18,7 @@ services:
         sync: false # Set this manually in Render dashboard
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: exam-pro-anchala-frontend
     env: static
     plan: free
