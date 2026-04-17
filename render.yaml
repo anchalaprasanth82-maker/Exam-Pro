@@ -1,7 +1,7 @@
 services:
   # Backend Web Service
   - type: web
-    name: quiz-platform-backend
+    name: exam-pro-anchala-backend
     env: node
     plan: free
     rootDir: backend
@@ -19,7 +19,7 @@ services:
 
   # Frontend Static Site
   - type: static
-    name: quiz-platform-frontend
+    name: exam-pro-anchala-frontend
     env: static
     plan: free
     rootDir: frontend
@@ -29,6 +29,6 @@ services:
       - key: VITE_API_URL
         fromService:
           type: web
-          name: quiz-platform-backend
+          name: exam-pro-anchala-backend
           property: host
     staticPublishCustomDomain: true
