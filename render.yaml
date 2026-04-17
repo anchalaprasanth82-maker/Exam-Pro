@@ -20,15 +20,14 @@ services:
   # Frontend Static Site
   - type: web
     name: exam-pro-anchala-frontend
-    env: static
+    runtime: static
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         fromService:
           type: web
           name: exam-pro-anchala-backend
           property: host
-    staticPublishCustomDomain: true
